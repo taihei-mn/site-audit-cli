@@ -1,0 +1,10 @@
+[project]
+name = "site-audit-cli"
+version = "0.1.0"
+description = "Rule-based CLI tool to audit static sites"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+
+[project.scripts]
+site-audit = "site_audit.cli:main"
