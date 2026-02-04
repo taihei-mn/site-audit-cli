@@ -4,16 +4,18 @@ import argparse
 from pathlib import Path
 import sys
 
+from site_audit.scanner.walk import discover_html_files
+
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="site-audit",
-        description="Audit a directory of static HTML files (wiring only).",
+        description="Audit a directory of static HTML files.",
     )
     p.add_argument(
         "path",
         type=Path,
-        help="Directory (or file) to audit",
+        help="Directory (or .html file) to audit",
     )
     p.add_argument(
         "--format",
@@ -33,8 +35,16 @@ def main(argv: list[str] | None = None) -> int:
         print(f"ERROR: path not found: {target}", file=sys.stderr)
         return 2
 
-    # Phase 2: wiring only. Actual scanning/rules/reporting comes in Phase 3.
-    print(f"site-audit: target={target} format={args.format}")
+    if target.is_file() and target.suffix.lower() != ".html":
+        print(f"ERROR: file is not .html: {target}", file=sys.stderr)
+        return 2
+
+    html_files = discover_html_files(target)
+    if not html_files:
+        print(f"ERROR: no .html files found under: {target}", file=sys.stderr)
+        return 2
+
+    print(f"Found {len(html_files)} HTML file(s).")
     return 0
 
 
