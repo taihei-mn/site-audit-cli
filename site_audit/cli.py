@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 
 from site_audit.scanner.walk import discover_html_files
+from site_audit.parser.html_extract import extract_from_html_file
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -44,7 +45,14 @@ def main(argv: list[str] | None = None) -> int:
         print(f"ERROR: no .html files found under: {target}", file=sys.stderr)
         return 2
 
-    print(f"Found {len(html_files)} HTML file(s).")
+    link_count = 0
+    img_count = 0
+    for f in html_files:
+        links, images = extract_from_html_file(f)
+        link_count += len(links)
+        img_count += len(images)
+
+    print(f"Found {len(html_files)} HTML file(s). Extracted {link_count} link(s), {img_count} image(s).")
     return 0
 
 
