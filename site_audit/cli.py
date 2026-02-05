@@ -5,7 +5,10 @@ from pathlib import Path
 import sys
 
 from site_audit.scanner.walk import discover_html_files
-from site_audit.parser.html_extract import extract_from_html_file
+from site_audit.parser.html_extract import extract_from_html_file, LinkRef
+from site_audit.rules.noopener import check_noopener
+from site_audit.reporter.markdown import render_markdown
+from site_audit.reporter.json_out import render_json
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -45,15 +48,22 @@ def main(argv: list[str] | None = None) -> int:
         print(f"ERROR: no .html files found under: {target}", file=sys.stderr)
         return 2
 
-    link_count = 0
-    img_count = 0
+    all_links: list[LinkRef] = []
+    img_count = 0  # reserved for future rules
+
     for f in html_files:
         links, images = extract_from_html_file(f)
-        link_count += len(links)
+        all_links.extend(links)
         img_count += len(images)
 
-    print(f"Found {len(html_files)} HTML file(s). Extracted {link_count} link(s), {img_count} image(s).")
-    return 0
+    findings = check_noopener(all_links)
+
+    if args.format == "json":
+        print(render_json(len(html_files), findings))
+    else:
+        print(render_markdown(len(html_files), findings))
+
+    return 1 if findings else 0
 
 
 if __name__ == "__main__":
